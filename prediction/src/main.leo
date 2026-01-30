@@ -1,5 +1,5 @@
 // The 'prediction' program.
-program predictionprivacyhackvii.aleo {
+program predictionprivacyhackviii.aleo {
     // A simple token structure to represent prediction pools
     struct Pool {
      id: field,
@@ -44,6 +44,7 @@ program predictionprivacyhackvii.aleo {
 
     // Save pool in public storage.
     mapping pools: field => Pool; // pool id => Pool details
+    storage pools_id: [field]; // list of pool ids
 
     // Track total predictions per pool
     mapping total_predictions: field => u64; // pool id => total predictions count
@@ -100,6 +101,7 @@ program predictionprivacyhackvii.aleo {
     ) {
         Mapping::set(total_predictions, id, 0u64);
         Mapping::set(pools, id, pool);
+        pools_id.push(id);
     }
 
     // Transition to lock a prediction pool (prevent further predictions).
