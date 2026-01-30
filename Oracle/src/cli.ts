@@ -45,12 +45,20 @@ async function setupSDK() {
 }
 
 program
-    .command("create-market <title> <threshold> <snapshot_time> [metric]")
+    .command("create-market")
     .description("Create a new prediction market")
+    .argument("<title>", "Title of the market")
+    .argument("<threshold>", "Threshold value")
+    .argument("<snapshot_time>", "Snapshot timestamp (Unix seconds)")
+    .argument("[metric]", "Metric type (default: eth_staking_rate)")
     .option("-d, --description <text>", "Description of the market", "")
+    .option("--option-a <text>", "Label for Option A", "YES")
+    .option("--option-b <text>", "Label for Option B", "NO")
     .action(async (title, threshold, snapshotTime, metric, options) => {
         const selectedMetric = metric || "eth_staking_rate";
         const description = options.description;
+        const optionA = options.optionA;
+        const optionB = options.optionB;
 
         const stringToField = (str: string): string => {
             const buffer = Buffer.from(str, "utf8");
@@ -67,11 +75,14 @@ program
             console.log(`🚀 Authorizing pool creation for ${title}...`);
 
             const titleField = stringToField(title);
+            const descriptionField = stringToField(description);
+            const optionAField = stringToField(optionA);
+            const optionBField = stringToField(optionB);
 
             const inputs = [
                 titleField,
-                "0field",
-                "[0field, 0field]",
+                descriptionField,
+                `[${optionAField}, ${optionBField}]`,
                 `${snapshotTime}u64`,
             ];
             const fee = CREATE_POOL_FEE / 1_000_000;
@@ -89,7 +100,7 @@ program
             console.log(`✅ Market creation transaction broadcasted! ID: ${txId}`);
 
             // Register in backend DB
-            await db.addMarket(title, parseInt(snapshotTime), parseFloat(threshold), selectedMetric, description);
+            await db.addMarket(title, parseInt(snapshotTime), parseFloat(threshold), selectedMetric, description, optionA, optionB);
             console.log(`Market registered in backend DB for snapshot at ${snapshotTime}`);
 
         } catch (e: any) {

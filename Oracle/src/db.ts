@@ -24,6 +24,8 @@ export async function initDb(): Promise<void> {
         status TEXT DEFAULT 'pending',
         metric_type TEXT DEFAULT 'eth_staking_rate',
         description TEXT,
+        option_a_label TEXT DEFAULT 'YES',
+        option_b_label TEXT DEFAULT 'NO',
         total_staked BIGINT DEFAULT 0,
         option_a_stakes BIGINT DEFAULT 0,
         option_b_stakes BIGINT DEFAULT 0
@@ -43,19 +45,23 @@ export async function addMarket(
     deadline: number,
     threshold: number,
     metricType: string = "eth_staking_rate",
-    description: string = ""
+    description: string = "",
+    optionALabel: string = "YES",
+    optionBLabel: string = "NO"
 ): Promise<void> {
     const query = `
-    INSERT INTO markets (market_id, deadline, threshold, status, metric_type, description)
-    VALUES ($1, $2, $3, 'pending', $4, $5)
+    INSERT INTO markets (market_id, deadline, threshold, status, metric_type, description, option_a_label, option_b_label)
+    VALUES ($1, $2, $3, 'pending', $4, $5, $6, $7)
     ON CONFLICT (market_id) DO UPDATE SET
         deadline = EXCLUDED.deadline,
         threshold = EXCLUDED.threshold,
         metric_type = EXCLUDED.metric_type,
-        description = EXCLUDED.description
+        description = EXCLUDED.description,
+        option_a_label = EXCLUDED.option_a_label,
+        option_b_label = EXCLUDED.option_b_label
     `;
     try {
-        await pool.query(query, [marketId, deadline, threshold, metricType, description]);
+        await pool.query(query, [marketId, deadline, threshold, metricType, description, optionALabel, optionBLabel]);
         console.log(`📝 Market ${marketId} added to DB (Metric: ${metricType}).`);
     } catch (err: any) {
         console.error(`❌ Error adding market ${marketId}:`, err.message);
@@ -123,6 +129,25 @@ export async function updateMarketStats(
         console.log(`📊 Updated on-chain stats for market ${marketId}.`);
     } catch (err: any) {
         console.error(`❌ Error updating stats for market ${marketId}:`, err.message);
+        throw err;
+    }
+}
+
+export async function updateMarketMetadata(
+    marketId: string,
+    optionALabel: string,
+    optionBLabel: string
+): Promise<void> {
+    const query = `
+    UPDATE markets 
+    SET option_a_label = $1, option_b_label = $2 
+    WHERE market_id = $3
+    `;
+    try {
+        await pool.query(query, [optionALabel, optionBLabel, marketId]);
+        console.log(`🏷️ Updated labels for market ${marketId}.`);
+    } catch (err: any) {
+        console.error(`❌ Error updating metadata for market ${marketId}:`, err.message);
         throw err;
     }
 }

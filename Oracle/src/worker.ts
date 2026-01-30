@@ -41,6 +41,19 @@ const stringToField = (str: string): string => {
     return `${bigInt}field`;
 };
 
+const fieldToString = (field: string): string => {
+    try {
+        const bigIntStr = field.replace("field", "");
+        const bigInt = BigInt(bigIntStr);
+        let hex = bigInt.toString(16);
+        if (hex.length % 2 !== 0) hex = "0" + hex;
+        const buffer = Buffer.from(hex, "hex");
+        return buffer.toString("utf8");
+    } catch (e) {
+        return "Unknown";
+    }
+};
+
 async function syncOnChainData() {
     console.log("🔄 Syncing on-chain market data...");
     const allMarkets = await db.getAllMarkets();
@@ -59,7 +72,7 @@ async function syncOnChainData() {
             if (poolData) {
                 console.log(`📊 Fetched on-chain data for ${market_id}`);
 
-
+                // Parse stats
                 const totalStakedMatch = poolData.match(/total_staked:\s*(\d+)u64/);
                 const optionAStakesMatch = poolData.match(/option_a_stakes:\s*(\d+)u64/);
                 const optionBStakesMatch = poolData.match(/option_b_stakes:\s*(\d+)u64/);
@@ -70,6 +83,14 @@ async function syncOnChainData() {
                     const optionBStakes = parseInt(optionBStakesMatch[1]);
 
                     await db.updateMarketStats(market_id, totalStaked, optionAStakes, optionBStakes);
+                }
+
+                // Parse metadata (labels)
+                const optionsMatch = poolData.match(/options:\s*\[(\d+field),\s*(\d+field)\]/);
+                if (optionsMatch) {
+                    const optionALabel = fieldToString(optionsMatch[1]);
+                    const optionBLabel = fieldToString(optionsMatch[2]);
+                    await db.updateMarketMetadata(market_id, optionALabel, optionBLabel);
                 }
             }
         } catch (e: any) {
