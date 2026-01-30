@@ -7,13 +7,14 @@ This service acts as an off-chain oracle for Aleo prediction markets, monitoring
 - **CLI**: Create new prediction markets and manually manage the oracle.
 - **Worker**: Periodically monitors pending markets and resolves them upon reaching deadlines.
 - **API**: Express-based service for the frontend to fetch market statuses, titles, and descriptions.
-- **SQLite Storage**: Local database for storing market metadata and off-chain descriptions.
+- **PostgreSQL Storage**: Reliable database for storing market metadata and off-chain descriptions.
 
 ## Prerequisites
 
 - **Node.js**: v18+ (tested on v24)
 - **Yarn**: Recommended package manager
 - **Aleo Account**: Private key with enough credits for fees.
+- **PostgreSQL**: v14+ (Local or Remote)
 - **Environment Variables**: See `.env.example`.
 
 ## Setup
@@ -25,7 +26,7 @@ This service acts as an off-chain oracle for Aleo prediction markets, monitoring
 2. Configure environment:
    ```bash
    cp .env.example .env
-   # Edit .env with your private key and Etherscan API key
+   # Edit .env with your private key, Etherscan API key, and PostgreSQL credentials
    ```
 
 ## Usage
@@ -56,5 +57,5 @@ yarn cli create-market "ETH-Over-4000" 4000 1738224000 eth_price --description "
 - `src/api.ts`: Express server implementation.
 - `src/worker.ts`: Background monitoring logic.
 - `src/cli.ts`: Command-line interface.
-- `src/db.ts`: SQLite database utilities.
+- `src/db.ts`: PostgreSQL database utilities.
 - `src/metrics/`: Data fetching handlers for different metric types.

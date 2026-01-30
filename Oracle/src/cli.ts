@@ -61,7 +61,7 @@ program
         };
 
         try {
-            db.initDb();
+            await db.initDb();
             const { programManager } = await setupSDK();
 
             console.log(`🚀 Authorizing pool creation for ${title}...`);
@@ -89,7 +89,7 @@ program
             console.log(`✅ Market creation transaction broadcasted! ID: ${txId}`);
 
             // Register in backend DB
-            db.addMarket(title, parseInt(snapshotTime), parseFloat(threshold), selectedMetric, description);
+            await db.addMarket(title, parseInt(snapshotTime), parseFloat(threshold), selectedMetric, description);
             console.log(`Market registered in backend DB for snapshot at ${snapshotTime}`);
 
         } catch (e: any) {

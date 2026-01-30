@@ -69,7 +69,7 @@ async function syncOnChainData() {
                     const optionAStakes = parseInt(optionAStakesMatch[1]);
                     const optionBStakes = parseInt(optionBStakesMatch[1]);
 
-                    db.updateMarketStats(market_id, totalStaked, optionAStakes, optionBStakes);
+                    await db.updateMarketStats(market_id, totalStaked, optionAStakes, optionBStakes);
                 }
             }
         } catch (e: any) {
@@ -146,7 +146,7 @@ async function resolveMarket(marketId: string, winningOption: number): Promise<b
 
 export async function startWorker() {
     await initThreadPool();
-    db.initDb();
+    await db.initDb();
     console.log("🤖 Oracle Worker is running and monitoring pending markets...");
 
     setInterval(async () => {
@@ -164,7 +164,7 @@ export async function startWorker() {
                     console.log(`⏰ Deadline reached for market: ${market_id}. Locking...`);
                     const success = await lockMarket(market_id);
                     if (success) {
-                        db.markLocked(market_id);
+                        await db.markLocked(market_id);
                     }
                 }
             }
@@ -188,7 +188,7 @@ export async function startWorker() {
 
                     const success = await resolveMarket(market_id, winningOption);
                     if (success) {
-                        db.markResolved(market_id);
+                        await db.markResolved(market_id);
                         console.log(
                             `✅ Market ${market_id} resolved as ${winningOption === 1 ? "YES" : "NO"}`
                         );

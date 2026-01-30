@@ -6,6 +6,15 @@ export const ORACLE_PRIVATE_KEY = process.env.ORACLE_PRIVATE_KEY || "";
 export const ALEO_NODE_URL = process.env.ALEO_NODE_URL || "";
 export const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 
+// PostgreSQL Configuration
+export const DB_CONFIG = {
+    host: process.env.PGHOST || "localhost",
+    port: parseInt(process.env.PGPORT || "5432"),
+    user: process.env.PGUSER || "postgres",
+    password: process.env.PGPASSWORD || "",
+    database: process.env.PGDATABASE || "oracle_db",
+};
+
 export const PROGRAM_ID = "predictionprivacyhackviii.aleo";
 export const ALEO_BROADCAST_URL = `${ALEO_NODE_URL}/testnet/transaction/broadcast`;
 
