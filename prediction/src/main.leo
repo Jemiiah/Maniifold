@@ -1,5 +1,5 @@
 // The 'prediction' program.
-program prediction.aleo {
+program predictionprivacyhack.aleo {
     // A simple token structure to represent prediction pools
     struct Pool {
      id: field,
@@ -12,6 +12,10 @@ program prediction.aleo {
      total_staked: u64, // Total amount staked across all options
      option_a_stakes: u64, // Total stakes for option A
      option_b_stakes: u64, // Total stakes for option B
+    }
+
+    struct Default {
+        id: u32
     }
 
 
@@ -40,8 +44,20 @@ program prediction.aleo {
 
     const ADMIN: address = aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5;
 
-    @noupgrade
+    @admin(address="aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5")
     async constructor() {}
+
+    async transition initialize() -> Future {
+        return finalize_initialize(self.caller);
+    }
+
+    async function finalize_initialize(owner: address) {
+        let def: Default = Default {
+            id: 1
+        };
+    }
+
+    transition main() {}
 
     async transition create_pool(public title: field, public description: field, public options: [field; 2], public deadline: u64) -> (Pool, Future) {
       // generate new pool id

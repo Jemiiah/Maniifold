@@ -1,0 +1,127 @@
+{
+  "type": "deploy",
+  "id": "at1q7wqs85hgkhamff8xvw3h2j70zvc8u7l34p0zyt9pz803wv8g5zqtnqent",
+  "owner": {
+    "address": "aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5",
+    "signature": "sign1vwm80fprja66s7nkrfx2lddmuw0t5xuqeeetj2kqvrmstaw2nyqxes5l94rch22ysynz5cr6ehdmp8jet035y672pvtxtqfzdkngzpzdr4jhtwchcujcrhmzq6tv3g8vz684uracsketga5vhn809y2ez8250md58cu38fht0ekpa7td6wpfme7u090l5dazdr7j38nvzfksxu7009g"
+  },
+  "deployment": {
+    "edition": 0,
+    "program": "program predictionprivacyhack.aleo;\n\nrecord Prediction:\n    owner as address.private;\n    id as field.private;\n    pool_id as field.private;\n    option as u64.private;\n    amount as u64.private;\n    claimed as boolean.private;\n\nstruct Pool:\n    id as field;\n    title as field;\n    description as field;\n    options as [field; 2u32];\n    deadline as u64;\n    status as u8;\n    winning_option as u64;\n    total_staked as u64;\n    option_a_stakes as u64;\n    option_b_stakes as u64;\n\nstruct Default:\n    id as u32;\n\nmapping pools:\n    key as field.public;\n    value as Pool.public;\n\nmapping total_predictions:\n    key as field.public;\n    value as u64.public;\n\nmapping user_predictions:\n    key as address.public;\n    value as [field; 1u32].public;\n\nmapping pool_predictions:\n    key as field.public;\n    value as [field; 1u32].public;\n\nfunction initialize:\n    async initialize self.caller into r0;\n    output r0 as predictionprivacyhack.aleo/initialize.future;\n\nfinalize initialize:\n    input r0 as address.public;\n    assert.eq true true;\n\nfunction main:\n\nfunction create_pool:\n    input r0 as field.public;\n    input r1 as field.public;\n    input r2 as [field; 2u32].public;\n    input r3 as u64.public;\n    hash.bhp256 r0 into r4 as field;\n    assert.eq self.caller aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5;\n    cast r4 r0 r1 r2 r3 0u8 0u64 0u64 0u64 0u64 into r5 as Pool;\n    async create_pool r4 r5 into r6;\n    output r5 as Pool.private;\n    output r6 as predictionprivacyhack.aleo/create_pool.future;\n\nfinalize create_pool:\n    input r0 as field.public;\n    input r1 as Pool.public;\n    set 0u64 into total_predictions[r0];\n    set r1 into pools[r0];\n    cast r0 into r2 as [field; 1u32];\n    set r2 into pool_predictions[r0];\n\nfunction lock_pool:\n    input r0 as field.public;\n    assert.eq self.caller aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5;\n    async lock_pool r0 into r1;\n    output r1 as predictionprivacyhack.aleo/lock_pool.future;\n\nfinalize lock_pool:\n    input r0 as field.public;\n    get pools[r0] into r1;\n    cast r1.id r1.title r1.description r1.options r1.deadline 1u8 r1.winning_option r1.total_staked r1.option_a_stakes r1.option_b_stakes into r2 as Pool;\n    set r2 into pools[r0];\n\nfunction resolve_pool:\n    input r0 as field.public;\n    input r1 as u64.public;\n    assert.eq self.caller aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5;\n    async resolve_pool r0 r1 into r2;\n    output r2 as predictionprivacyhack.aleo/resolve_pool.future;\n\nfinalize resolve_pool:\n    input r0 as field.public;\n    input r1 as u64.public;\n    get pools[r0] into r2;\n    cast r2.id r2.title r2.description r2.options r2.deadline 2u8 r1 r2.total_staked r2.option_a_stakes r2.option_b_stakes into r3 as Pool;\n    set r3 into pools[r0];\n\nfunction predict:\n    input r0 as field.private;\n    input r1 as u64.private;\n    input r2 as u64.private;\n    input r3 as u64.private;\n    is.eq r1 1u64 into r4;\n    is.eq r1 2u64 into r5;\n    or r4 r5 into r6;\n    assert.eq r6 true;\n    assert.neq r2 0u64;\n    hash.bhp256 r3 into r7 as field;\n    cast self.caller r7 r0 r1 r2 false into r8 as Prediction.record;\n    ternary r4 r2 0u64 into r9;\n    ternary r4 0u64 r2 into r10;\n    async predict r0 r7 r2 r1 r9 r10 into r11;\n    output r8 as Prediction.record;\n    output r11 as predictionprivacyhack.aleo/predict.future;\n\nfinalize predict:\n    input r0 as field.public;\n    input r1 as field.public;\n    input r2 as u64.public;\n    input r3 as u64.public;\n    input r4 as u64.public;\n    input r5 as u64.public;\n    contains pools[r0] into r6;\n    assert.eq r6 true;\n    get pools[r0] into r7;\n    assert.eq r7.status 0u8;\n    cast block.timestamp into r8 as u64;\n    gt r7.deadline r8 into r9;\n    assert.eq r9 true;\n    add r7.total_staked r2 into r10;\n    add r7.option_a_stakes r4 into r11;\n    add r7.option_b_stakes r5 into r12;\n    cast r7.id r7.title r7.description r7.options r7.deadline r7.status r7.winning_option r10 r11 r12 into r13 as Pool;\n    set r13 into pools[r0];\n    cast r1 into r14 as [field; 1u32];\n    set r14 into pool_predictions[r0];\n    get total_predictions[r0] into r15;\n    add r15 1u64 into r16;\n    set r16 into total_predictions[r0];\n\nconstructor:\n    assert.eq program_owner aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5;\n",
+    "verifying_keys": [
+      [
+        "initialize",
+        [
+          "verifier1qygqqqqqqqqqqqq69gqqqqqqqqqqu2sqqqqqqqqqkatsqqqqqqqqpdnsqqqqqqqqqz4n5qqqqqqqqqqvqqqqqqqqqqq24j88f6lnt62v2ck45l8wsnjvlujerxywacq97sedlynm8klflr9uyfl94srr46kgz825067rn5uqkxlh6qm6pw8a88s36zet80umsm8whjzc6zyzcukdrmtekjzdwte6mwx459s2sksnu8c6kd0uxd6qp7upteehah0sxe34peex62y89r3z9wjjgjxqtwa5rhn58ju86mkm0c5c9wrh7dfrvchj8dvqkmt5srmn3l3pfuv524jx9869czaf6krrfq5y9uxj2g3cvdfp6lqs4h6ccxla7up6ghqem4ryze2nkpl7eqq9a27s7a9yp6pykth687nk3sfjyf987z57xme78e7a0lh87sf5h05ljjgqdx87xj6066k934s4usqfp2a27wm9g472zhlhuhx3tnq86gy2f9cpml5fkrzeztvr7u3sz62qu06xnd29d7xew4junlg2ptgprk77xu9ttguhnxeqw58t7psh4l3wak7xjssds2p3uf8ylah30s8nkw6w3syt4gxlhgsnj73eyu8qp8s8q2jzeatuumpvlm9jpahn2fdsx930zlzttvm8rxd0u4vur2d6y4xnywkza8e766fdjfsx5lrkqp9t9494p4nrnxsgz88tlz408e8s5qjd3wq0ekf8wh47tfysyqv53usmd6j6psqahm07cq977rwl7q9g3694qfzyaetdqqnjkxrswcavczqxmpns67hwk50gal3mhq8rfeaudkukkwn7u0qk2g5pugffvqqup7adz5dfr8sqnmnt0twx2lahn4s60t5nzzfty0ws39xp3h3h2gfusg546j55c094wmwm24zswcsqqzg8czh3pqhg7ga3tqgv9l085yrwj6vap64lvle5yw5pcf4f28unnr28tqgvyhnxf0nqlp34wc0cqgn7pes787kpzyaqypvl6ld6wyyagh2apgd3m235554gyqadp9l2ks7sqqqqqqqqquuc60v",
+          "certificate1qyqsqqqqqqqqqqydj65r703qxzt4q34jsxcxnynhvr92mqgnhlhwhwyjsj33nkdtxzs4j09yffw8hqj2yzanfcf8k6qqq8f4am2"
+        ]
+      ],
+      [
+        "main",
+        [
+          "verifier1qygqqqqqqqqqqqpuycqqqqqqqqqz6fsqqqqqqqqqx49sqqqqqqqqqdz7qqqqqqqqqq0rvqqqqqqqqqqvqqqqqqqqqqqg55lauvmsw32a88g30ptkty77yth2q6y98lnhy6pevtapa0qrh7u9e05mrruqh9vruqwylskcfcuqmd6y9lpzyuzhu35lplw2xae5psm22pjhnhgf2l8yde85hcdtxlsymxfzagjhkxaefr8g9evk6q0gqt6ex69gcnw58rs4sdlgcfdsd4fg3dk768a9sggtqmkufaxtn3y3gqdd769puthgcmwjzs47rawtszvcy2xuzd0kyaph2zy32fzhhh93lzhz8wwvndms499f5jpwexz98gx9tjunyzy32ej2as93k7k90qrhxl4psy33lfudgpkfp0sn7ds4z33ar77vjul4ax2rzjj79rp725y0htyhhpwr8nvpsgv27wwlzzqup88vqyjzd448w7plcldx9mjagh5rj076a65erjxql9n9q52g4t4ajwwsznfqds3t0x88j4g8wzupt36dt3syxqnyvf954twjlqavqzhw5htuyqtpj0ynjcvjzf8tt259702xdfg2pu6fwm8kk2au3udgq093hjzdvylnkrxywqclna47qef43sg4y7vap574q24e3wvdcp3nmhpaud22whcqtflp7rfk8hnwqrycp20ud8f2pxq6vcynfns6ham0kmv29rvtwmwt7lw90psc5k30rr80zz6e2xr6s0uxy57nszv5fqp3pgp22mdaluhx8k5we0yffyjqsdsqfcyvx6uwxyvr8h5fzazkylu3wnsf8cz3eftlpcqntg5zj5qq3pv9shk5vp2x94als7cnv3ws7chre8jt4a4pcw2mjt5nhrxev4tjg9erlexqs6zfxjskgptmrqgpuh3qe772lc4ex6q82whz7t72xuf883vrxnqq3mx07zy6tuvszf3nzgcrle4sskgygsu5etyr5drgrm86qgphtenegsr85tazclqq7jdlkwv83dh5nzwhjmkt4pfudlxe0vmsqqqqqqqqqaxrs6d",
+          "certificate1qyqsqqqqqqqqqqynweemc4za6dmjntrgsnjry8t4fx9j67nuryansgrn2rfyrg30jxx2c8jfdktc3u7wa4rnwszdhgqqqssha9v"
+        ]
+      ],
+      [
+        "create_pool",
+        [
+          "verifier1qygqqqqqqqqqqqr02qqqqqqqqqqx75qqqqqqqqqqvtsqqqqqqqqqqcf7qyqqqqqqqr3xjqqqqqqqqqqvqqqqqqqqqqqq8dnkyf3hpt6c8we6zzwr9q6evyhwqxsd7rax24zu8k53pmp8w2wyerj4cvdtg7wqpkz8u4605uyqvxc9fuhaaqg2epckvu24ac4pv4huv8hsvgg7832k2asrtzrkdlwzryuuwaav475wm4cx3gnu4ghszw70sd0zm06zvelmxwhzr8q7e676se2wnwa4xxw7musgjgmw2rg5c85gxuq6z2j9na40uf5ku9e5sp23hdvpchlue4gyepwqpysq2vpj0x0fjz9mpc83wkgt0c2z2k6tfxh70vmpyx0y6h7epevuf8x2pqgr66vyjlcsh6tqmfc5236mc9cc3j8w9wnn3x58ssg266lne9t7074jphuz40a9sgwu9dyk4gs0tyq0833ncvsh33tyljm5jeuaas5fvedw6fnw4epnktaa8p8g0tdfv5p6zghl8c2k8sjxgx3xxvwq8gvp49m7emmfp4v0mk36env9aaanv7r4hfnwv752g6apy80jgnc5t29prrvpyn6gprdp7tkc5grrkq0qp5pj782n3z5k0k036z79rgdnkakgrg98ljhqexgqp5ctfh7re9f70q4264384w47vvf3kman2pduqq8tnhenmj4zg7ml0pu9wz9gl8eeew5kzwgxzrfccvwaxak76w3psm0ft0eukxmerku6uw7rmmdcnqw9jpzxxdnr6w43en30qh4jatwczckaemuxevpgjeug9lvjlhptmuye0heqkn2y8pw5pzpxx7nk5gqm2vadxlz4ufs565uc58m98c9gndcr7yewlhzkvpe2unnzpzjywtu7qrhap0tg0v42f7ngzzdpl8gpxvu8jcplra92jgl76tnryu8krm2njp2wwwy94c7z30ga7qtxezrcllk3we73xqstgaw945e5eedqpnfu365ysa3aaaeryujrggrsaymlwujzdnwsk6rcmxwhkmsenhdeapksqqqqqqqqqn4n3nk",
+          "certificate1qyqsqqqqqqqqqqxngj9djmv2wfj5qgyzj33cvgz35pqknhz2jl2qw6lg0n77x86pnpzhwqm8t48yt7l384zdd7pa55qqqaggp7t"
+        ]
+      ],
+      [
+        "lock_pool",
+        [
+          "verifier1qygqqqqqqqqqqqqg9sqqqqqqqqq0c2cqqqqqqqqqhdsqqqqqqqqqpfuqqqqqqqqqqztrcqqqqqqqqqqvqqqqqqqqqqq2t57622zjcda2hequxp75qsppwzu99v8qeuw8dq9ltmevnxnjg2r3gzc2nm5f2c9k4e028qvyvm5pldpn239ukjtfstgwq288pkk3682k5d6sutghdje5fs5ph733nejk83tkejvezwxppr2hhcsq246qzj9qr6r4p384rk8stwqfmrkln262puk6d8mcwpa8nd8q5pm6srv50ta0k6wv6p9kq72vvdemc0jdsr6dr5qqlgtcnzzw4u42xu08vp7nd589ezq49klfd8fptaruwkrq3dmtuawvsggxtrzm6fhm7l798qw7w4jwr0mvtfcrf5ey3ghlrc83pxp2vjwp9xttmwf5543ez6h2waunvwnn98t3ehrw0kuxf95r3vqk787gy5a54k27z0e9uxacau97rpe7reuksnyua7amdprrdawthgwmcceam6ndqw97u40qplh7pf5pmrytfllkgaa0ktfagu4tyr593ehgh2gaskxtzw7dsv3nzw94uvpm07dq8fuda5wzm39yewtngkvqz0du68y2efzgksjk2vpjfh3j8n4u3apas750prdm86ghezsny7ye3ycn233uxt8rrx3md907mqa0szvz6yxwznevzhunkd5yly5zsepd03k9dvgf2y0lqvxc0f4wxgtwt6z4ndwrj07xvfqwcpfcajcysqtpjw9md2m86ps9erql2tqdg4gagkl6qq9slef5tln7ug8mqwt4zx9k6uvud2ll7dmmfdkwwy7rkqqxesugn0n5my4dg2pnvs46rzzxmxdtjd3rg5rs2pzw9m0f0p2um02k3p0rg9garxhecwf3r6k0y8qqavdcuw0qcqhgq3th7fvqf65rvvm6zt8qvrmdqg7g2rvkx0atdetrnlhpku5lexcc656g3xmzknaqpw94h5czz3w5gcs5pw0g3avmxgyqhz6yyvp54e6w0ncw47l7r06r0vlsqqqqqqqqqfdqqkh",
+          "certificate1qyqsqqqqqqqqqqxrarng7ppjej0lsvx6rjgv39m856ltvwzs7agp05dppylw30h4teyvvwrktxsjyrufvmpcu6fzygqqqjy8ldp"
+        ]
+      ],
+      [
+        "resolve_pool",
+        [
+          "verifier1qygqqqqqqqqqqqpt9cqqqqqqqqqp7tsqqqqqqqqq4f5sqqqqqqqqp0v0qqqqqqqqqpuruqqqqqqqqqqvqqqqqqqqqqqwyxf9dl5dukjq0xr995aqafg82uzys32zxj4ll7l000lfkewgfly5kjlqymzq5drk6fyn72yjjygp2f0yjhg98acu040tr7pe74ajpj4z7mwpqwzpluvawj4sh7ax5y0a62m57r7jvfrktytpz8ykt5nqr0th3dqq4kn254nevmdjr7t59dcz8yfykl32uwwtjlkhtwr09vp7pglvm8pg85tpcmg492lskmf8s95qfeeufjmuxrcvshwsheqmf56r5kxcndv33kgkrxe039eskdlg27jdcks58amlnmevrk78km5prq2z0utdnz2pd0teukzgcs6z4surw5h7e42ehvegeg4d6jd5thclhge7nhk2k3wvvzqg97yd77gdvxqjxs3gnsu4fgu4unrqp0ga7etlj9yd5gkjcaswm2lcutkhzr2fys8slkc85ae9hudxjf47hyn0mqgq8rhfnax578ka0xfm8taztsrlryywz0u9jx0m2y6cmsfdggewh80pl97fxxms3ws0s76kwhqhytaqqkavf8kz5da9fv03cm8l8g5774sp6hsgu3mm92zart6x87j26km36dfsktrllvwnyn2rk3fasfnmqygf3e8d5yu9wkpyfrvwu9k4dc3zmje6dg3ngp6fnc2zpy2qw29j66cglrctxucgfhyhcnm02qy9uqw7f00p2h0qy7uuhn6hfl0flm37zs0j2gfqcc5g5n30m80n56ze3wyunw9hjzh46tvy2e9y3z3ljgq6ke4zwwa3tswtesrksjzgn5f5z5q7yper0crc66jq4u2xqrhsj00vl8z4wjnj2wgu84a9f5hr8ggpndu7h9nupzlhhwsnfkknw69dwwh2s2f8zew9hn8mywsh63fkhhxmpv5y8ksunjv8fa6vtz5vf6lqpm7gd3hs5qp3ys5jlync0kzutnamtc58c9z0u8pey6fnqz35gq4st9pqqqqqqqqqq8h78c6",
+          "certificate1qyqsqqqqqqqqqq9u6jupfczy6vylqgeuewlv8e8f4nx5hwn8352qa5eg3szvnnq65enszqaazsf3wm6t2vd8rsxtrkqqqsqstyv"
+        ]
+      ],
+      [
+        "predict",
+        [
+          "verifier1qysqqqqqqqqqqqq54sqqqqqqqqqzttqqqqqqqqqqx6fszqqqqqqqpk7gqyqqqqqqqpns2qgqqqqqqqqvqqqqqqqqqqqz2ya49xyndtxcc9ya5wt48w2w3dw4ca2yc7jwd58wwmkvn0fendakzzzarux2683rvsj37axyvnqqhe8tsfua6d4afpu0pfnapytxyft5uet6d42s5pa7rsgg6a85jc9kuuhfgvkw8vds2xu7ma3hm2lcprd9nyvp2m80gy0f7g79q0vr7rdhy6vgq43y9phywrhkg5nemgdmekq0d075h2tcpe6dwykhwtqpsxxkurmgqhndc4gd5e83fta3lrs7lma8zlgwquzlcz2ex7s6ksgmha7a7eufhzw5x6zyy30ldc79hqfdnw0vttp4vkqzd7fhy432pjjljqnvxweu0zy20ysm5hup4rpp092jslzyle6fs4gnj4gy9j4fdyq94dhcnk2twvwyxu4nd9yr9weeezccm69jny5rl9r66s2fmj4dwsw7dd006hj4k77ct06dfr7vghcpfvefcsra5jfadcygmtr7gkdenzvg53t2z93qqyhy7cxryg08g5ls8y8s27d75wt8cm92lwnnqdcsp88839jhcekpcqrrqycypfuxpdru3pw79fu82wgmdnthypnwgqdqgtzqy5j4xgr4xllhgl73a4c9qqjavewnnpxy8388hnc0x6hjznewr8ref2xwurfhk5yn3e3gqwa2v4mzvxqcj0mku0fgvkw6hkrvaqpnfcwh8faxtnxuucxtmppcwydg03wv4w9lzwst02g5qhy6hzgn0ha75sth3hu2g7pc08wlcujq7yq0mz85t57yjxumrfyuhn7s4jnctmzs6vp0p8g99gxd4anuem7cvceh4pelxp3mj8cu9c8f2ru9kcvqza8wua2dclw3fm687kjs8lasxrwdywt50x7ars4kld90pft6zznnyadqcct3scvq6j4u7eh8hp5czv053w3zzftc0jqqerqqwhgfxmn4c5336yfkjwxjxds4jyy0em7gqt2sqqqqqqqqqcckdmn",
+          "certificate1qyqsqqqqqqqqqqz90c5uhqtynpy3hvws89s7z0sem4944xmxzf5p775s5cqqfklpfhkvp4wfzr9hredypfxzn32fncqqqnr39ys"
+        ]
+      ]
+    ],
+    "program_checksum": [
+      "174u8",
+      "57u8",
+      "131u8",
+      "47u8",
+      "217u8",
+      "245u8",
+      "25u8",
+      "254u8",
+      "9u8",
+      "3u8",
+      "33u8",
+      "46u8",
+      "46u8",
+      "165u8",
+      "75u8",
+      "80u8",
+      "181u8",
+      "31u8",
+      "237u8",
+      "73u8",
+      "161u8",
+      "155u8",
+      "121u8",
+      "197u8",
+      "95u8",
+      "242u8",
+      "149u8",
+      "107u8",
+      "182u8",
+      "131u8",
+      "69u8",
+      "173u8"
+    ],
+    "program_owner": "aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5"
+  },
+  "fee": {
+    "transition": {
+      "id": "au1jlf04cagqcpe4mju63d99p7ryh3vazskh9hnefn9xxn9lk62lugqzgw9sw",
+      "program": "credits.aleo",
+      "function": "fee_public",
+      "inputs": [
+        {
+          "type": "public",
+          "id": "7033156409180635435341674441226625109602330172808064254430677207583557533812field",
+          "value": "8080167u64"
+        },
+        {
+          "type": "public",
+          "id": "7240639247042833269324463325749766337965546447098080661001696213079951817746field",
+          "value": "0u64"
+        },
+        {
+          "type": "public",
+          "id": "7014906469628230713225378305502081472934089579939985089928445638904617394018field",
+          "value": "8256548251287333789448896647368098302700491911511433098321197115260365875613field"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "future",
+          "id": "3019201440572759280115797178200379116436649965249198000964765663082746365480field",
+          "value": "{\n  program_id: credits.aleo,\n  function_name: fee_public,\n  arguments: [\n    aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5,\n    8080167u64\n  ]\n}"
+        }
+      ],
+      "tpk": "4113130068550110840321207884612958437085505248807909547021017391407014893388group",
+      "tcm": "666002168831195100896473444778553847085352295329876773527628369802445282437field",
+      "scm": "96137408452944298968409710055480421733198604313948952400417267856215438764field"
+    },
+    "global_state_root": "sr1uekpzcnsx0ff0k6adtnfjv5284gdxjtrc077xlc5ltuaju0heyrqx4afey",
+    "proof": "proof1qyqsqqqqqqqqqqqpqqqqqqqqqqqvxsss63kc2x42csgw4summpwh624vequvvyayy50h3fzsxvz82vqvchn56xfrdmsgnam6zqdt4eqqqy9hp85ss4x0de92pxjljc8wfl8v22p0n6dyxed9ey3jtv7xunh9p5qdsgcuxgcsmcxrhygz3adwdqqpq4e8wwyanaway9k8548edvshfp2t4qkjm40cz7n42p2a7dzc693t3y7fys77l7dn96p85z585gq6edld4077n4dv39wav8ragw5sjwm6cjlnf6svvyt4pvv5ldz7sp9zxap4jtwfz2dx937xcaua9k5qnyu2hpjdv6dl4ap753yz54wd5ysww3cys5jhg5ldgked4kve85yplf42tmf5m0wmps2lv0tjeckgzgdacauawxerr5cxae6qqvshndyqdpnnewz36438p2yvtxnrv8pwyn5y9fwnexqugumjq9gkmfv4srj87pzmaa37vva0adlfryq78r0ayswr9rqk6esc3w8d9uz9ggrj53vl6kvq36u9wjfxx7l8lh2pqqwywc2wzh5nk4ehhgla0hmf2n99jgawzezfmv7mx4yp8xmdt9tkkyh30w4znfcwp0jyjfglxvyy5jq927mtax9ngeeq05j9dsdqcnt9arfryt87r6484ycunjjug7xw6v7m4u362rztff9hn3srmgumj4yqvzhwlsjmcgkj32q5682hudhe0rgqktf4nu4pugmevtpv9f74nvzfpp6y7z04xw86x0c09pt86g84guaytvzrcs2p4qmyzvnm2l25uzsx7z503wyerhrjcf68yqeuqz9xar8atd92rjavwz7ft5484tznpjhu6dth3asjr7ag0dkc5h7r6js7c349ew58x3ujgtqn6ztq4wcsc4kwps9z4q2xczz4frn9e0kp3x2c9kuwzelk7ftr2feqx97rx3cjwmuke0muk7eguj4dtaal36kgrdaphs3qprj0rj8qt52993j8zy9k68w8u675wqjtdluysp0nuk42glz4amhwaknd8mgym92dn4ngqpt5rry9825l8e8wkk88ajhta68cp3wgne28uckjzcd7uu3j6kczphl5ukskd87vhfljllh8u46wcdk4sjf2gk8r27zuyfuns8w4mtyqduw36mrga57tqpqkr86uccm69lrvjg60jhy96w9y9hahsphd3tcxqvqqqqqqqqqqp5q98u0scfqlrxz6euf0dgm5p2rsnycf3x36u5540pvv4rpafhm7gwc2452sfyg0qwa3nmlqmkn8syqp5yeps45k0t9zpng4apflwtvlcwgynvy9qfcsjr5h8d3kcslph69dsl07jk58k4cu7ttcyahz76vqqym9yar7u8tct8udqm58887a663lmeyf0z8gd5cpeaz3g40tcr3qyy5jzx2x504ap9zqy4fg2rk7es4twwkd6zkz9w2qexj34hr85pnnduwax8axv7cvlj08pvx328ejsqqqfzyfet"
+  }
+}

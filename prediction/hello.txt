@@ -8,6 +8,17 @@
         claimed: bool,
     }
 
+APPNAME="predictionprivacyhack"
+PRIVATEKEY="APrivateKey1zkp5osJ4AGo1pJMLnjdL2QjVd1NVdNzYqpLmKenmVXpkMkP"
+
+snarkos developer deploy \
+     "${APPNAME}.aleo" \
+    --private-key "${PRIVATEKEY}" \
+    --query "https://vm.aleo.org/api" \
+    --path "./build/" \
+    --broadcast "https://vm.aleo.org/api/testnet3/transaction/broadcast"
+
+
 
     // This is the constructor for the program.
     // The constructor allows you to manage program upgrades.
