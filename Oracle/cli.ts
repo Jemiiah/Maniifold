@@ -1,3 +1,4 @@
+import "@provablehq/sdk/testnet.js";
 import { Command } from "commander";
 import {
     Account,
@@ -5,6 +6,7 @@ import {
     NetworkRecordProvider,
     ProgramManager,
     AleoKeyProvider,
+    initThreadPool,
 } from "@provablehq/sdk";
 import * as db from "./db.js";
 import { startWorker } from "./worker.js";
@@ -13,7 +15,7 @@ import {
     ALEO_NODE_URL,
     PROGRAM_ID,
     CREATE_POOL_FEE,
-    ALEO_BROADCAST_URL,
+    PROGRAM_SOURCE,
 } from "./config.js";
 
 const program = new Command();
@@ -38,26 +40,34 @@ async function setupSDK() {
         recordProvider
     );
     programManager.setAccount(account);
+    await initThreadPool();
     return { programManager };
 }
 
 program
-    .command("create-market <title> <threshold> <snapshot_time>")
-    .option(
-        "-m, --metric <type>",
-        "Metric type (eth_staking_rate, eth_price)",
-        "eth_staking_rate"
-    )
+    .command("create-market <title> <threshold> <snapshot_time> [metric]")
     .description("Create a new prediction market")
-    .action(async (title, threshold, snapshotTime, options) => {
+    .action(async (title, threshold, snapshotTime, metric) => {
+        const selectedMetric = metric || "eth_staking_rate";
+
+        const stringToField = (str: string): string => {
+            const buffer = Buffer.from(str, "utf8");
+            let hex = buffer.toString("hex");
+            if (buffer.length > 31) hex = buffer.subarray(0, 31).toString("hex");
+            const bigInt = BigInt("0x" + hex);
+            return `${bigInt}field`;
+        };
+
         try {
             db.initDb();
             const { programManager } = await setupSDK();
 
             console.log(`🚀 Authorizing pool creation for ${title}...`);
 
+            const titleField = stringToField(title);
+
             const inputs = [
-                title, // Expecting valid field string e.g. "123field"
+                titleField,
                 "0field",
                 "[0field, 0field]",
                 `${snapshotTime}u64`,
@@ -70,12 +80,14 @@ program
                 priorityFee: fee,
                 privateFee: false,
                 inputs: inputs,
+                program: PROGRAM_SOURCE,
+                keySearchParams: { cacheKey: `${PROGRAM_ID}:${"create_pool"}` }
             });
 
             console.log(`✅ Market creation transaction broadcasted! ID: ${txId}`);
 
             // Register in backend DB
-            db.addMarket(title, parseInt(snapshotTime), parseFloat(threshold), options.metric);
+            db.addMarket(title, parseInt(snapshotTime), parseFloat(threshold), selectedMetric);
             console.log(`Market registered in backend DB for snapshot at ${snapshotTime}`);
 
         } catch (e: any) {

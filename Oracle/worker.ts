@@ -1,9 +1,11 @@
+import "@provablehq/sdk/testnet.js";
 import {
     Account,
     AleoNetworkClient,
     NetworkRecordProvider,
     ProgramManager,
     AleoKeyProvider,
+    initThreadPool,
 } from "@provablehq/sdk";
 import * as db from "./db.js";
 import { registry } from "./metrics/registry.js";
@@ -37,6 +39,14 @@ async function resolveMarket(marketId: string, winningOption: number): Promise<b
     }
 
     try {
+        const stringToField = (str: string): string => {
+            const buffer = Buffer.from(str, "utf8");
+            let hex = buffer.toString("hex");
+            if (buffer.length > 31) hex = buffer.subarray(0, 31).toString("hex");
+            const bigInt = BigInt("0x" + hex);
+            return `${bigInt}field`;
+        };
+
         console.log(`📡 Loading embedded program ${PROGRAM_ID}...`);
         // Assuming program source handling is done via imports or deployment if needed.
         // The SDK executes against the network/cache.
@@ -45,7 +55,8 @@ async function resolveMarket(marketId: string, winningOption: number): Promise<b
             `🚀 Authorizing resolution for market ${marketId} with option ${winningOption}...`
         );
 
-        const inputs = [marketId, `${winningOption}u64`];
+        const marketIdField = stringToField(marketId);
+        const inputs = [marketIdField, `${winningOption}u64`];
         const fee = RESOLVE_POOL_FEE / 1_000_000;
 
         const executionResponse = await programManager.execute({
@@ -54,6 +65,8 @@ async function resolveMarket(marketId: string, winningOption: number): Promise<b
             priorityFee: fee,
             privateFee: false,
             inputs: inputs,
+            program: PROGRAM_SOURCE,
+            keySearchParams: { cacheKey: `${PROGRAM_ID}:resolve_pool` }
         });
 
         console.log(`✅ Transaction Broadcasted! ID: ${executionResponse}`);
@@ -65,6 +78,7 @@ async function resolveMarket(marketId: string, winningOption: number): Promise<b
 }
 
 export async function startWorker() {
+    await initThreadPool();
     db.initDb();
     console.log("🤖 Oracle Worker is running and monitoring pending markets...");
 
@@ -110,4 +124,10 @@ export async function startWorker() {
             console.error("Error in worker loop:", e.message);
         }
     }, 60000); // 60 seconds
+}
+
+// Start worker if run directly
+import { fileURLToPath } from "url";
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    startWorker().catch(console.error);
 }
