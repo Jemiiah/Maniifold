@@ -1,4 +1,4 @@
-# BlockSeer
+# Manifold
 
 ## Project Structure
 
