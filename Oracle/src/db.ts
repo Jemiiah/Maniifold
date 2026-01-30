@@ -19,6 +19,7 @@ export async function initDb(): Promise<void> {
     const query = `
     CREATE TABLE IF NOT EXISTS markets (
         market_id TEXT PRIMARY KEY,
+        title TEXT,
         deadline BIGINT,
         threshold DECIMAL,
         status TEXT DEFAULT 'pending',
@@ -34,6 +35,7 @@ export async function initDb(): Promise<void> {
     try {
         await pool.query(query);
         // Ensure columns exist for existing tables
+        await pool.query(`ALTER TABLE markets ADD COLUMN IF NOT EXISTS title TEXT`);
         await pool.query(`ALTER TABLE markets ADD COLUMN IF NOT EXISTS option_a_label TEXT DEFAULT 'YES'`);
         await pool.query(`ALTER TABLE markets ADD COLUMN IF NOT EXISTS option_b_label TEXT DEFAULT 'NO'`);
         console.log("📦 Database initialized successfully (PostgreSQL).");
@@ -45,6 +47,7 @@ export async function initDb(): Promise<void> {
 
 export async function addMarket(
     marketId: string,
+    title: string,
     deadline: number,
     threshold: number,
     metricType: string = "eth_staking_rate",
@@ -53,9 +56,10 @@ export async function addMarket(
     optionBLabel: string = "NO"
 ): Promise<void> {
     const query = `
-    INSERT INTO markets (market_id, deadline, threshold, status, metric_type, description, option_a_label, option_b_label)
-    VALUES ($1, $2, $3, 'pending', $4, $5, $6, $7)
+    INSERT INTO markets (market_id, title, deadline, threshold, status, metric_type, description, option_a_label, option_b_label)
+    VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8)
     ON CONFLICT (market_id) DO UPDATE SET
+        title = EXCLUDED.title,
         deadline = EXCLUDED.deadline,
         threshold = EXCLUDED.threshold,
         metric_type = EXCLUDED.metric_type,
@@ -64,7 +68,7 @@ export async function addMarket(
         option_b_label = EXCLUDED.option_b_label
     `;
     try {
-        await pool.query(query, [marketId, deadline, threshold, metricType, description, optionALabel, optionBLabel]);
+        await pool.query(query, [marketId, title, deadline, threshold, metricType, description, optionALabel, optionBLabel]);
         console.log(`📝 Market ${marketId} added to DB (Metric: ${metricType}).`);
     } catch (err: any) {
         console.error(`❌ Error adding market ${marketId}:`, err.message);

@@ -100,7 +100,7 @@ program
             console.log(`✅ Market creation transaction broadcasted! ID: ${txId}`);
 
             // Register in backend DB
-            await db.addMarket(title, parseInt(snapshotTime), parseFloat(threshold), selectedMetric, description, optionA, optionB);
+            await db.addMarket(titleField, title, parseInt(snapshotTime), parseFloat(threshold), selectedMetric, description, optionA, optionB);
             console.log(`Market registered in backend DB for snapshot at ${snapshotTime}`);
 
         } catch (e: any) {
