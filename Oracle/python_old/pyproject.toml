@@ -1,0 +1,19 @@
+[project]
+name = "oracle"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aleo",
+    "click>=8.3.1",
+    "python-dotenv",
+    "requests",
+    "zkml>=0.0.2b2",
+]
+
+[project.scripts]
+oracle = "cli:cli"
+
+[tool.uv.sources]
+aleo = { git = "https://github.com/ProvableHQ/python-sdk.git", subdirectory = "sdk" }
