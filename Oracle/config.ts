@@ -6,7 +6,7 @@ export const ORACLE_PRIVATE_KEY = process.env.ORACLE_PRIVATE_KEY || "";
 export const ALEO_NODE_URL = process.env.ALEO_NODE_URL || "";
 export const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 
-export const PROGRAM_ID = "prediction.aleo";
+export const PROGRAM_ID = "predictionprivacyhack.aleo";
 export const ALEO_BROADCAST_URL = `${ALEO_NODE_URL}/testnet/transaction/broadcast`;
 
 // Costs
@@ -59,12 +59,11 @@ function create_pool:
     input r1 as field.public;
     input r2 as [field; 2u32].public;
     input r3 as u64.public;
-    hash.bhp256 r0 into r4 as field;
     assert.eq self.caller aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5;
-    cast r4 r0 r1 r2 r3 0u8 0u64 0u64 0u64 0u64 into r5 as Pool;
-    async create_pool r4 r5 into r6;
-    output r5 as Pool.private;
-    output r6 as predictionprivacyhack.aleo/create_pool.future;
+    cast r0 r0 r1 r2 r3 0u8 0u64 0u64 0u64 0u64 into r4 as Pool;
+    async create_pool r0 r4 into r5;
+    output r4 as Pool.private;
+    output r5 as predictionprivacyhack.aleo/create_pool.future;
 finalize create_pool:
     input r0 as field.public;
     input r1 as Pool.public;
