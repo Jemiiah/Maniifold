@@ -14,6 +14,7 @@ import {
     ALEO_NODE_URL,
     PROGRAM_ID,
     PROGRAM_SOURCE,
+    CREATE_POOL_FEE,
     LOCK_POOL_FEE,
     RESOLVE_POOL_FEE,
 } from "./config.js";
@@ -61,7 +62,9 @@ async function syncOnChainData() {
     for (const market of allMarkets) {
         const { market_id } = market;
         try {
-            const marketIdField = stringToField(market_id);
+            // Use market_id directly if it's already a field, otherwise convert
+            const marketIdField = market_id.endsWith('field') ? market_id : stringToField(market_id);
+
             // Query the 'pools' mapping in the program
             const poolData: any = await networkClient.getProgramMappingValue(
                 PROGRAM_ID,
@@ -90,6 +93,69 @@ async function syncOnChainData() {
                 console.error(`❌ Error syncing data for ${market_id}: ${e.message}`);
             }
         }
+    }
+}
+
+// Check if a market exists on-chain
+async function marketExistsOnChain(marketId: string): Promise<boolean> {
+    try {
+        const marketIdField = marketId.endsWith('field') ? marketId : stringToField(marketId);
+        const poolData = await networkClient.getProgramMappingValue(
+            PROGRAM_ID,
+            "pools",
+            marketIdField
+        );
+        return poolData !== null && poolData !== undefined;
+    } catch (e: any) {
+        // "not found" means market doesn't exist on-chain
+        return false;
+    }
+}
+
+// Create a market on the Aleo blockchain
+async function createMarketOnChain(market: any): Promise<boolean> {
+    if (!ORACLE_PRIVATE_KEY || !ALEO_NODE_URL) {
+        console.error("❌ Missing Oracle credentials in .env.");
+        return false;
+    }
+
+    try {
+        const { market_id, title, description, deadline, option_a_label, option_b_label } = market;
+
+        console.log(`🚀 Creating market on-chain: ${title} (${market_id})`);
+
+        // Convert strings to field format for Aleo
+        const titleField = stringToField(title || "Market");
+        const descField = stringToField(description || "Prediction market");
+        const optionAField = stringToField(option_a_label || "YES");
+        const optionBField = stringToField(option_b_label || "NO");
+        const deadlineU64 = `${deadline}u64`;
+
+        // Inputs for create_pool: title, description, options[2], deadline
+        const inputs = [
+            titleField,
+            descField,
+            `[${optionAField}, ${optionBField}]`,
+            deadlineU64
+        ];
+
+        const fee = CREATE_POOL_FEE / 1_000_000;
+
+        const executionResponse = await programManager.execute({
+            programName: PROGRAM_ID,
+            functionName: "create_pool",
+            priorityFee: fee,
+            privateFee: false,
+            inputs: inputs,
+            program: PROGRAM_SOURCE,
+            keySearchParams: { cacheKey: `${PROGRAM_ID}:create_pool` }
+        });
+
+        console.log(`✅ Create Pool Transaction Broadcasted! ID: ${executionResponse}`);
+        return true;
+    } catch (e: any) {
+        console.error(`❌ SDK Error during market creation: ${e.message}`);
+        return false;
     }
 }
 
@@ -169,7 +235,23 @@ export async function startWorker() {
             // 0. Sync on-chain stats (TVL, stakes)
             await syncOnChainData();
 
-            // 1. Handle Pending -> Locked
+            // 1. Check for markets that need to be created on-chain
+            const marketsNotOnChain = await db.getMarketsNotOnChain();
+            for (const market of marketsNotOnChain) {
+                const { market_id, title } = market;
+
+                console.log(`📝 Market "${title}" not on-chain. Creating...`);
+                const success = await createMarketOnChain(market);
+                if (success) {
+                    // Mark as on-chain in database (transaction submitted)
+                    await db.markOnChain(market_id);
+                    console.log(`✅ Market "${title}" creation transaction submitted.`);
+                }
+                // Add delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+
+            // 2. Handle Pending -> Locked
             const pending = await db.getPendingMarkets();
             for (const market of pending) {
                 const { market_id, deadline } = market;
@@ -182,7 +264,7 @@ export async function startWorker() {
                 }
             }
 
-            // 2. Handle Locked -> Resolved
+            // 3. Handle Locked -> Resolved
             const locked = await db.getLockedMarkets();
             for (const market of locked) {
                 const { market_id, threshold, metric_type } = market;

@@ -29,7 +29,8 @@ export async function initDb(): Promise<void> {
         option_b_label TEXT DEFAULT 'NO',
         total_staked BIGINT DEFAULT 0,
         option_a_stakes BIGINT DEFAULT 0,
-        option_b_stakes BIGINT DEFAULT 0
+        option_b_stakes BIGINT DEFAULT 0,
+        on_chain BOOLEAN DEFAULT FALSE
     )
     `;
     try {
@@ -38,6 +39,7 @@ export async function initDb(): Promise<void> {
         await pool.query(`ALTER TABLE markets ADD COLUMN IF NOT EXISTS title TEXT`);
         await pool.query(`ALTER TABLE markets ADD COLUMN IF NOT EXISTS option_a_label TEXT DEFAULT 'YES'`);
         await pool.query(`ALTER TABLE markets ADD COLUMN IF NOT EXISTS option_b_label TEXT DEFAULT 'NO'`);
+        await pool.query(`ALTER TABLE markets ADD COLUMN IF NOT EXISTS on_chain BOOLEAN DEFAULT FALSE`);
         console.log("📦 Database initialized successfully (PostgreSQL).");
     } catch (err: any) {
         console.error("❌ Database initialization error:", err.message);
@@ -166,6 +168,28 @@ export async function getMarketById(marketId: string): Promise<any | null> {
         return rows.length > 0 ? rows[0] : null;
     } catch (err: any) {
         console.error(`❌ Error fetching market ${marketId}:`, err.message);
+        throw err;
+    }
+}
+
+export async function getMarketsNotOnChain(): Promise<any[]> {
+    try {
+        const query = `SELECT * FROM markets WHERE on_chain = FALSE OR on_chain IS NULL`;
+        const { rows } = await pool.query(query);
+        return rows;
+    } catch (err: any) {
+        console.error("❌ Error fetching markets not on chain:", err.message);
+        throw err;
+    }
+}
+
+export async function markOnChain(marketId: string): Promise<void> {
+    const query = `UPDATE markets SET on_chain = TRUE WHERE market_id = $1`;
+    try {
+        await pool.query(query, [marketId]);
+        console.log(`⛓️ Market ${marketId} marked as on-chain in DB.`);
+    } catch (err: any) {
+        console.error(`❌ Error marking market ${marketId} as on-chain:`, err.message);
         throw err;
     }
 }
