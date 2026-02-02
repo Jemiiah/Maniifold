@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, ChevronDown, LogOut, Copy, Check, Search, X } from 'lucide-react';
+import { ChevronDown, LogOut, Copy, Check, Search, X, Settings } from 'lucide-react';
+import Link from 'next/link';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { DecryptPermission, WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,9 @@ interface NavbarProps {
     cash: number;
   };
 }
+
+// Admin address - only this wallet can access admin panel
+const ADMIN_ADDRESS = 'aleo1jl3q3uywtdzlr8dln65xjc2mr7vwa2pm9fsenq49zsgsz5a8pqzs0j7cj5';
 
 function truncateAddress(address: string) {
   if (address.length <= 14) return address;
@@ -64,12 +68,9 @@ export function Navbar({
           <div className="flex items-center justify-between h-16">
             {/* Left: Logo */}
             <div className="flex items-center gap-8">
-              <div className="flex items-center gap-2.5 cursor-pointer shrink-0" onClick={onLogoClick}>
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <Box className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-lg font-bold tracking-tight text-white hidden sm:block">
-                  Block<span className="text-blue-400">Seer</span>
+              <div className="flex items-center cursor-pointer shrink-0" onClick={onLogoClick}>
+                <span className="text-lg font-bold tracking-tight text-white">
+                  Mani<span className="text-blue-400">fold</span>
                 </span>
               </div>
 
@@ -178,6 +179,16 @@ export function Navbar({
                               )}
                               {copied ? 'Copied!' : 'Copy Address'}
                             </button>
+                            {address === ADMIN_ADDRESS && (
+                              <Link
+                                href="/admin"
+                                onClick={() => setShowAccountMenu(false)}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-blue-400 hover:bg-zinc-800 rounded-lg transition-colors"
+                              >
+                                <Settings className="w-4 h-4" />
+                                Admin Panel
+                              </Link>
+                            )}
                             <button
                               onClick={() => {
                                 disconnect();
