@@ -86,19 +86,23 @@ export function usePrediction() {
 
         if (requestRecords) {
           try {
-            const records = await requestRecords('credits.aleo');
-            // Find a record with sufficient balance
+            // Fetch credits from our prediction program, not credits.aleo
+            const records = await requestRecords(PROGRAM_ID);
+            // Find a credits record with sufficient balance
             const suitableRecord = records?.find((record: string) => {
               try {
                 const parsed = JSON.parse(record);
-                return parsed.microcredits && BigInt(parsed.microcredits.replace('u64.private', '')) >= BigInt(amountInMicrocredits);
+                // Check if this is a credits record (has microcredits field)
+                if (!parsed.microcredits) return false;
+                const balance = BigInt(parsed.microcredits.replace('u64.private', '').replace('u64', ''));
+                return balance >= BigInt(amountInMicrocredits);
               } catch {
                 return false;
               }
             });
             creditsRecord = suitableRecord;
           } catch (e) {
-            console.warn('Could not fetch credits records:', e);
+            console.warn('Could not fetch credits records from program:', e);
           }
         }
 

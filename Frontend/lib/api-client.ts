@@ -1,5 +1,8 @@
 // Backend API client for fetching markets
-const API_BASE_URL = 'https://blockseer.onrender.com';
+const isDev = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+const API_BASE_URL = isDev
+    ? 'http://localhost:3000'
+    : 'https://blockseer.onrender.com';
 
 // API response types matching backend format
 export interface ApiMarket {
