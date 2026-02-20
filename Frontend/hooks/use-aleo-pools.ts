@@ -57,7 +57,7 @@ function apiMarketToMarket(market: ApiMarket, onChain?: AleoPool | null): Market
     noPrice,
     change: 0,
     status,
-    description: market.description || `A prediction market on Manifold.`,
+    description: market.description || `A prediction market on BlockSeer.`,
     resolution: `This market resolves based on the ${market.metric_type} oracle. Threshold: ${market.threshold}`,
     history: [yesPrice, yesPrice, yesPrice, yesPrice, yesPrice, yesPrice, yesPrice, yesPrice, yesPrice, yesPrice],
   };

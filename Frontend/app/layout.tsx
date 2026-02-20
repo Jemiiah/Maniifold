@@ -10,7 +10,7 @@ const Providers = dynamic(() => import('@/components/providers').then(mod => mod
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Manifold - Blockchain Prediction Markets',
+  title: 'BlockSeer - Blockchain Prediction Markets',
   description: 'Trade on crypto events with zero-knowledge privacy on Aleo.',
 };
 

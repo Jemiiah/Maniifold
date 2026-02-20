@@ -1,6 +1,6 @@
-# Manifold Frontend
+# BlockSeer Frontend
 
-Next.js 14 web app for Manifold prediction markets on Aleo.
+Next.js 14 web app for BlockSeer prediction markets on Aleo.
 
 ## Project Structure
 
